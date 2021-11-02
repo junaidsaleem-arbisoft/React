@@ -1,6 +1,5 @@
-import logo from './logo.svg';
-import './App.css';
-import WeatherMain from './components/weatherMain';
+import './assets/App.css';
+import WeatherMain from './components/WeatherComponent';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
