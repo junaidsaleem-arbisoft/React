@@ -6,6 +6,7 @@ import Footer from './FooterComponent';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Chart from './ChartComponent'
+import {urls, params, key} from '../config';
 
 class WeatherMain extends Component {
     constructor(props) {
@@ -34,9 +35,30 @@ class WeatherMain extends Component {
     }
 
     async getDataService(url, value, param) {
-        var data = await fetch(url + value + param + process.env.REACT_APP_API_KEY + "&language=en-us")
+        var data = await fetch(url + value + param + key + "&language=en-us")
         var json = await data.json()
         return json;
+    }
+
+    weekDataNormalizer(data) {
+        var objs = []
+        var min, max;
+        for (let i = 0; i < data.DailyForecasts.length && this.state.weeklyData.length < 5; i++) {
+            min = data.DailyForecasts[i].Temperature.Minimum.Value
+            max = data.DailyForecasts[i].Temperature.Maximum.Value
+            let dateObj = new Date(data.DailyForecasts[i].Date)
+            objs.push(
+                { minimum: min, maximum: max, date: dateObj.toDateString() }
+            )
+        }
+        return objs;
+    }
+
+    dayDataNormalizer(data) {
+        var max, min;
+        min = data.DailyForecasts[0].Temperature.Minimum.Value
+        max = data.DailyForecasts[0].Temperature.Maximum.Value
+        return [max, min];
     }
 
     async getWeeklyData() {
@@ -45,16 +67,9 @@ class WeatherMain extends Component {
         var objs = []
         if (this.state.selectedOption != null) {
             const city = jsonData[this.state.selectedOption.value].Key
-            const data = await this.getDataService(process.env.REACT_APP_WEEK_URL, city, process.env.REACT_APP_FORECAST_PARAM)
+            const data = await this.getDataService(urls.week, city, params.forecast)
             if (data != null) {
-                for (let i = 0; i < data.DailyForecasts.length && this.state.weeklyData.length < 5; i++) {
-                    min = data.DailyForecasts[i].Temperature.Minimum.Value
-                    max = data.DailyForecasts[i].Temperature.Maximum.Value
-                    let dateObj = new Date(data.DailyForecasts[i].Date)
-                    objs.push(
-                        { minimum: min, maximum: max, date: dateObj.toDateString() }
-                    )
-                }
+                objs = this.weekDataNormalizer(data);
                 this.setState({
                     weeklyData: objs
                 })
@@ -64,24 +79,21 @@ class WeatherMain extends Component {
 
     async getDayData() {
         const jsonData = this.jsonData;
-        let max = null, min = null;
+        let maxMin = null;
         if (this.state.selectedOption != null && this.state.apiCalled) {
             const city = jsonData[this.state.selectedOption.value].Key
-            const data = await this.getDataService(process.env.REACT_APP_DAY_URL, city, process.env.REACT_APP_FORECAST_PARAM)
+            const data = await this.getDataService(urls.day, city, params.city)
             if (data != null) {
-                min = data.DailyForecasts[0].Temperature.Minimum.Value
-                max = data.DailyForecasts[0].Temperature.Maximum.Value
+                maxMin = this.dayDataNormalizer(data);
             }
             this.setState({
                 apiCalled: false,
                 chartData: [
-                    { text: 'Minimum Temperature', value: min },
-                    { text: 'Maximum Temperature', value: max }
+                    { text: 'Minimum Temperature', value: maxMin[1] },
+                    { text: 'Maximum Temperature', value: maxMin[0] }
                 ]
-            },
-                () => {
-                    this.getWeeklyData()
-                });
+            });
+            this.getWeeklyData()
         }
     }
 
@@ -96,7 +108,7 @@ class WeatherMain extends Component {
             citiesData: []
         })
         if (value.length > 0) {
-            const data = await this.getDataService(process.env.REACT_APP_CITY_URL, value, process.env.REACT_APP_CITY_PARAM)
+            const data = await this.getDataService(urls.city, value, params.city)
             this.jsonData = data;
             for (let i = 0; i < data.length; i++) {
                 this.state.citiesData.push({ label: data[i].LocalizedName + "," + data[i].AdministrativeArea.LocalizedName + "," + data[i].Country.LocalizedName, value: i })

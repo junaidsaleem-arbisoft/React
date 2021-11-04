@@ -1,5 +1,5 @@
 import React from "react";
-function footer(props) {
+function Footer(props) {
     return (
         <div className="footer">
             <p>© 2021 Arbisoft. All rights reserved.</p>
@@ -7,4 +7,4 @@ function footer(props) {
     );
 }
 
-export default footer;
+export default Footer;

@@ -1,6 +1,6 @@
 import React from "react";
 import BarChart from 'react-bar-chart';
-function chart(props) {
+function Chart(props) {
     const margin = { top: 20, right: 0, bottom: 30, left: 40 };
     const width = 400;
     return (
@@ -12,4 +12,4 @@ function chart(props) {
     );
 }
 
-export default chart;
+export default Chart;
